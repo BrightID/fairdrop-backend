@@ -105,4 +105,35 @@ describe('Setting chainId', () => {
       .expect('Content-Type', /json/)
     expect(initialResponse.body).toHaveProperty('chainId', 1)
   })
+
+  it('should fail with arbitrary string as signature', async() => {
+    const wallet = Wallet.createRandom()
+    const address = await wallet.getAddress()
+    const chainId = 100 //xDai
+
+    // get current payout chainID. Should be 1 for default mainnet
+    const initialResponse = await request(app)
+      .get(`/address/${address}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+    expect(initialResponse.body).toHaveProperty('chainId', 1)
+
+    const signature = 'Some string instead of real signature'
+    const postBody = {
+      chainId,
+      signature
+    }
+    const res = await request(app)
+      .post(`/address/${address}`)
+      .send(postBody)
+      .expect(400)
+    expect(res.body).toHaveProperty('error', 'signature not matching')
+
+    // check if chainId is unchanged
+    const finalResponse = await request(app)
+      .get(`/address/${address}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+    expect(initialResponse.body).toHaveProperty('chainId', 1)
+  })
 })

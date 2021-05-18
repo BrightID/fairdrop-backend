@@ -105,7 +105,13 @@ app.post("/address/:rawAddress", (request, response, next) => {
     return
   }
   const signedMessage = `Set chainId for ${checksummedAddress} to ${chainId}`
-  const signerAddress = verifyMessage(signedMessage, signature)
+  let signerAddress: string
+  try {
+    signerAddress = verifyMessage(signedMessage, signature)
+  } catch(e) {
+    response.status(400).json({error:"signature not matching"})
+    return
+  }
   if (signerAddress !== checksummedAddress) {
     response.status(400).json({error:"signature not matching"})
     return
