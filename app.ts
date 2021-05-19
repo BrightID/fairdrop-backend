@@ -15,11 +15,35 @@ app.use(cors())
 
 
 // dummy in-memory database for now
-const database = new NodeCache({stdTTL: 100, checkperiod: 120})
+const database = new NodeCache({stdTTL: 3600, checkperiod: 120})
+
+// dummy phase info
+const inSomeMinutes = Date.now()+(60*1000)*1
+database.set('currentRegistrationEnd', inSomeMinutes )
+database.set('nextClaimStart', inSomeMinutes +(60*1000*120) ) // airdrop update will take about 2 hours
+// database.set('nextRegistrationStart', inSomeMinutes +(60*1000*120) ) // Next registration phase will start together with airdrop update
+database.set('nextRegistrationStart', 0 ) // There will be no next registration period
+
 interface addressEntry {
   chainId: number,
   nextAmount: BigNumber,
 }
+
+/**
+ * Get info about registration phase
+ * -> When does current registration phase end
+ * -> When will next phase start
+ */
+app.get("/registrationInfo", (request, response, next) => {
+  const currentRegistrationEnd = database.get('currentRegistrationEnd')
+  const nextRegistrationStart = database.get('nextRegistrationStart')
+  const nextClaimStart = database.get('nextClaimStart')
+  response.json({
+    currentRegistrationEnd,
+    nextRegistrationStart,
+    nextClaimStart
+  })
+})
 
 /**
  * Get info about an address
