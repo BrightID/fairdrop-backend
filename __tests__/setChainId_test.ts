@@ -77,7 +77,9 @@ describe('Setting chainId', () => {
     const address = await wallet.getAddress()
     const chainId = 100 //xDai
     const message = `Set chainId for ${address} to ${chainId}`
-    const victimAddress = '0xc44E4c49Ffa5Db98CA52770dff3e371ECB01f2D9'
+
+    const otherWallet = Wallet.createRandom()
+    const victimAddress = await otherWallet.getAddress()
 
     // get current payout chainID. Should be 1 for default mainnet
     const initialResponse = await request(app)
