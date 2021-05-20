@@ -1,8 +1,12 @@
 import {BigNumber, ethers} from "ethers"
 import {verifyMessage} from "ethers/lib/utils"
 import express from "express"
-import NodeCache from "node-cache"
+import {connect} from "mongoose"
 import cors from "cors"
+import AddressInfo from "./models/AddressInfo"
+import RegistrationInfo from "./models/registrationInfo"
+// @ts-ignore
+import {mongoHost, mongoPort, mongoDb} from "./config"
 
 const app = express()
 
@@ -13,36 +17,29 @@ app.use(express.json())
 // TODO - Should CORS setup be more strict?
 app.use(cors())
 
-
-// dummy in-memory database for now
-const database = new NodeCache({stdTTL: 3600, checkperiod: 120})
-
-// dummy phase info
-const inSomeMinutes = Date.now()+(60*1000)*1
-database.set('currentRegistrationEnd', inSomeMinutes )
-database.set('nextClaimStart', inSomeMinutes +(60*1000*120) ) // airdrop update will take about 2 hours
-// database.set('nextRegistrationStart', inSomeMinutes +(60*1000*120) ) // Next registration phase will start together with airdrop update
-database.set('nextRegistrationStart', 0 ) // There will be no next registration period
-
-interface addressEntry {
-  chainId: number,
-  nextAmount: BigNumber,
-}
+/* MongoDB */
+const uri: string = `mongodb://${mongoHost}:${mongoPort}/${mongoDb}`
+connect(uri, (err: any) => {
+  if (err) {
+    console.log(err.message);
+  } else {
+    console.log("Successfully Connected!");
+  }
+});
 
 /**
  * Get info about registration phase
  * -> When does current registration phase end
  * -> When will next phase start
  */
-app.get("/registrationInfo", (request, response, next) => {
-  const currentRegistrationEnd = database.get('currentRegistrationEnd')
-  const nextRegistrationStart = database.get('nextRegistrationStart')
-  const nextClaimStart = database.get('nextClaimStart')
-  response.json({
-    currentRegistrationEnd,
-    nextRegistrationStart,
-    nextClaimStart
-  })
+app.get("/registrationInfo", async (request, response, next) => {
+  try {
+    const doc = await RegistrationInfo.findOne()
+    response.send(doc)
+  } catch (err) {
+    console.log (`Failed to get settings from mongodb`)
+    response.send("Error")
+  }
 })
 
 /**
@@ -54,7 +51,7 @@ app.get("/registrationInfo", (request, response, next) => {
  *   nextAmount: <expected amount for next airdrop phase>
  * }
  */
-app.get("/address/:rawAddress", (request, response, next) => {
+app.get("/address/:rawAddress", async (request, response, next) => {
   const {rawAddress} = request.params
   if (!rawAddress) {
     response.status(400).json({error: "missing address"})
@@ -70,29 +67,39 @@ app.get("/address/:rawAddress", (request, response, next) => {
     return
   }
 
-  // lookup address details in database
-  const entry:addressEntry|undefined = database.get(checksummedAddress)
-  // fallback to mainnet
-  const chainId = entry?.chainId || 1
-  // fallback to 0 amount
-  const nextAmount = entry?.nextAmount || BigNumber.from(0)
+  // default values when no info in database
+  let chainId = 1
+  let nextAmount = BigNumber.from(0)
 
-  response.json({
-    chainId,
-    nextAmount
-  })
+  try {
+    const doc = await AddressInfo.findOne({address: checksummedAddress})
+    if (doc) {
+      console.log(`Found entry: ${doc.address}, ${doc.chainId}, ${doc.nextAmount}`)
+      chainId = doc.chainId
+      nextAmount = doc.nextAmount ? BigNumber.from(doc.nextAmount) : nextAmount
+    } else {
+      console.log(`No doc found for address ${checksummedAddress}`)
+    }
+    response.json({
+      chainId,
+      nextAmount
+    })
+  } catch(e) {
+    console.log(`Failed to retrieve address info`)
+    response.status(500).json({ error: "Failed to query database" });
+  }
 })
 
 /**
  * Set the payout chainId for an address.
  *
- * Expected body:
+ * Expected payload in body:
  * {
  *   "chainId": 123,
  *   "signature": "signature string"
  * }
  */
-app.post("/address/:rawAddress", (request, response, next) => {
+app.post("/address/:rawAddress", async (request, response, next) => {
   const {rawAddress} = request.params
   const {chainId, signature} = request.body
 
@@ -142,8 +149,20 @@ app.post("/address/:rawAddress", (request, response, next) => {
   }
 
   // store new chainId
-  database.set(checksummedAddress, {chainId})
-  response.json({ success: true });
+  try {
+    const res = await AddressInfo.updateOne(
+      { address: checksummedAddress },
+      { chainId: chainId },
+      { upsert: true }
+    );
+    res.n; // Number of documents matched
+    res.nModified; // Number of documents modified
+    console.log(`Found ${res.n} entries, updated ${res.nModified} entries.`)
+    response.json({ success: true });
+  } catch (err) {
+    console.log(`failed to set chainId: ${err.message}`)
+    response.status(500).json({ error: "Failed to update database" });
+  }
 })
 
 app.get("/", (req, res) => res.send("Fairdrop backend server!"))

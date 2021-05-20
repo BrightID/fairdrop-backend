@@ -8,9 +8,13 @@
     "build": "tsc --project ./"
   },
   "dependencies": {
+    "@types/mongodb": "^3.6.14",
+    "@types/mongoose": "^5.10.5",
     "cors": "^2.8.5",
     "ethers": "^5.1.4",
     "express": "^4.17.1",
+    "mongodb": "^3.6.7",
+    "mongoose": "^5.12.10",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
