@@ -1,8 +1,8 @@
 import {connect} from "mongoose"
+import RegistrationInfo from "../models/registrationInfo"
 
 // @ts-ignore
 import {mongoDb, mongoHost, mongoPort} from "../config"
-import RegistrationInfo from "../models/registrationInfo"
 
 const main = async (currentRegistrationEnd: number, nextRegistrationStart:number, nextClaimStart: number) => {
   console.log(`Setting currentRegistrationEnd to ${currentRegistrationEnd}...`)

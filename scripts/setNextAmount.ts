@@ -1,9 +1,9 @@
-import {BigNumber, ethers} from "ethers"
+import {ethers} from "ethers"
 import {connect} from "mongoose"
+import AddressInfo from "../models/AddressInfo"
 
 // @ts-ignore
 import {mongoDb, mongoHost, mongoPort} from "../config"
-import AddressInfo from "../models/AddressInfo"
 
 const main = async (rawAddress: string, amount: string) => {
   console.log(`Setting nextAmount for ${rawAddress} to ${amount}`)

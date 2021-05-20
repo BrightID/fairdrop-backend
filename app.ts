@@ -75,7 +75,7 @@ app.get("/address/:rawAddress", async (request, response, next) => {
     const doc = await AddressInfo.findOne({address: checksummedAddress})
     if (doc) {
       console.log(`Found entry: ${doc.address}, ${doc.chainId}, ${doc.nextAmount}`)
-      chainId = doc.chainId
+      chainId = doc.chainId || chainId
       nextAmount = doc.nextAmount ? BigNumber.from(doc.nextAmount) : nextAmount
     } else {
       console.log(`No doc found for address ${checksummedAddress}`)
