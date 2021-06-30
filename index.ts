@@ -1,5 +1,5 @@
 import app from "./app"
-const PORT = 8000
+const PORT = 9090
 
 
 app.listen(PORT, () => {
