@@ -5,6 +5,7 @@ import {connect} from "mongoose"
 import cors from "cors"
 import AddressInfo from "./models/AddressInfo"
 import ClaimInfo from "./models/ClaimInfo"
+import ContractAddress from "./models/ContractAddress"
 import RegistrationInfo from "./models/registrationInfo"
 // @ts-ignore
 import {mongoHost, mongoPort, mongoDb} from "./config"
@@ -64,6 +65,42 @@ app.get("/claimInfo/:rawAddress", async (request, response, next) => {
   } catch(e) {
     console.log(`Failed to retrieve claim info for `)
     response.status(500).json({ error: "Failed to query database" });
+  }
+})
+
+app.get("/contract/:chainId/:contractName", async (request, response, next)=> {
+  const {chainId, contractName} = request.params
+  if (!chainId) {
+    response.status(400).json({error: "missing chainId"})
+    return
+  }
+  if (!contractName) {
+    response.status(400).json({error: "missing contractName"})
+    return
+  }
+  let numericChainId: number
+  try {
+    numericChainId = parseInt(chainId, 10)
+  } catch (e) {
+    response.status(400).json({error: "Invalid chainId"})
+    return
+  }
+
+  try {
+    const doc = await ContractAddress.findOne({
+      chainId: numericChainId,
+      name: contractName.toLowerCase()
+    })
+    if (doc) {
+      response.json({
+        address: doc.address
+      })
+    } else {
+      response.status(404).json({error: "Not found"})
+    }
+  } catch (e) {
+    console.log(`Failed to retrieve contract info: ${e}`)
+    response.status(500).json({error: "Failed to query database"})
   }
 })
 
