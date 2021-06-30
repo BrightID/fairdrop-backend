@@ -4,6 +4,7 @@ import express from "express"
 import {connect} from "mongoose"
 import cors from "cors"
 import AddressInfo from "./models/AddressInfo"
+import ClaimInfo from "./models/ClaimInfo"
 import RegistrationInfo from "./models/registrationInfo"
 // @ts-ignore
 import {mongoHost, mongoPort, mongoDb} from "./config"
@@ -26,6 +27,45 @@ connect(uri, (err: any) => {
     console.log("Successfully Connected!");
   }
 });
+
+/**
+ * Get merkle leaf for an address
+ */
+app.get("/claimInfo/:rawAddress", async (request, response, next) => {
+  const {rawAddress} = request.params
+  if (!rawAddress) {
+    response.status(400).json({error: "missing address"})
+    return
+  }
+
+  // verify address
+  let checksummedAddress:string
+  try {
+    checksummedAddress = ethers.utils.getAddress(rawAddress)
+  } catch(e) {
+    response.status(400).json({error: "invalid address"})
+    return
+  }
+
+  try {
+    const doc = await ClaimInfo.findOne({address: checksummedAddress})
+    if (doc) {
+      console.log(`Found claimInfo entry: ${doc.address}, ${doc.chainId} ${doc.leaf}`)
+      response.json({
+        chainId: doc.chainId,
+        leaf: doc.leaf
+      })
+      return
+    } else {
+      console.log(`No doc found for address ${checksummedAddress}`)
+      response.status(404).json({ error: "No claim found for address" });
+      return
+    }
+  } catch(e) {
+    console.log(`Failed to retrieve claim info for `)
+    response.status(500).json({ error: "Failed to query database" });
+  }
+})
 
 /**
  * Get info about registration phase
@@ -68,7 +108,8 @@ app.get("/address/:rawAddress", async (request, response, next) => {
   }
 
   // default values when no info in database
-  let chainId = 1
+  // 4 for Rinkeby, 1 for mainnet, 31337 for hardhat test
+  let chainId = 31337
   let nextAmount = BigNumber.from(0)
 
   try {
