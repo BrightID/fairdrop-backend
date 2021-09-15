@@ -146,7 +146,7 @@ app.get("/address/:rawAddress", async (request, response, next) => {
 
   // default values when no info in database
   // 4 for Rinkeby, 1 for mainnet, 31337 for hardhat test
-  let chainId = 31337
+  let chainId = 1
   let nextAmount = BigNumber.from(0)
 
   try {
