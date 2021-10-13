@@ -6,6 +6,8 @@
     "outDir": "./build",
     "esModuleInterop": true,
     "strict": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "lib": ["esnext"]
   }
 }
