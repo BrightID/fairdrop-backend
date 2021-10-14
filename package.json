@@ -9,7 +9,8 @@
     "list": "./node_modules/.bin/pm2 list",
     "logs": "./node_modules/.bin/pm2 logs fairdrop-backend",
     "postinstall": "./node_modules/.bin/pm2 install typescript",
-    "stop": "./node_modules/.bin/pm2 delete fairdrop-backend"
+    "stop": "./node_modules/.bin/pm2 delete fairdrop-backend",
+    "yarn": "./node_modules/.bin/yarn"
   },
   "dependencies": {
     "@uniswap/sdk-core": "^3.0.1",
@@ -24,7 +25,8 @@
     "nodemon": "^2.0.7",
     "pm2": "^5.1.2",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "yarn": "^1.22.15"
   },
   "devDependencies": {
     "@types/cors": "^2.8.10",
