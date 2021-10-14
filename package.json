@@ -4,8 +4,12 @@
   "main": "index.ts",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon index.ts",
-    "build": "tsc --project ./"
+    "start": "./node_modules/.bin/pm2 start index.ts --name fairdrop-backend",
+    "build": "tsc --project ./",
+    "list": "./node_modules/.bin/pm2 list",
+    "logs": "./node_modules/.bin/pm2 logs fairdrop-backend",
+    "postinstall": "./node_modules/.bin/pm2 install typescript",
+    "stop": "./node_modules/.bin/pm2 delete fairdrop-backend"
   },
   "dependencies": {
     "@uniswap/sdk-core": "^3.0.1",
@@ -18,6 +22,7 @@
     "mongoose": "^5.12.10",
     "node-cache": "^5.1.2",
     "nodemon": "^2.0.7",
+    "pm2": "^5.1.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"
   },
