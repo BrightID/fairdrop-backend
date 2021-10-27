@@ -21,14 +21,14 @@ app.use(express.json());
 app.use(cors());
 
 /* MongoDB */
-const uri: string = `mongodb://${mongoHost}:${mongoPort}/${mongoDb}`;
-connect(uri, (err: any) => {
-  if (err) {
-    console.log(err.message);
-  } else {
-    console.log("Successfully Connected!");
-  }
-});
+// const uri: string = `mongodb://${mongoHost}:${mongoPort}/${mongoDb}`;
+// connect(uri, (err: any) => {
+//   if (err) {
+//     console.log(err.message);
+//   } else {
+//     console.log("Successfully Connected!");
+//   }
+// });
 
 /**
  * Get merkle leaf for an address

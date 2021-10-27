@@ -1,8 +1,10 @@
 import { providers, Contract } from "ethers";
 import { Token } from "@uniswap/sdk-core";
 import V2LP_CONTRACT_ABI from "./abis/v2_lp.json";
+import ERC20_CONTRACT_ABI from "./abis/erc20.json";
 import BigNumber from "bignumber.js";
 import { utils } from "ethers";
+import { ERC721NftsProvider } from "./erc721Nfts";
 import { abi as UniswapV3PoolABI } from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json";
 import { Pool } from "@uniswap/v3-sdk";
 
@@ -11,6 +13,10 @@ const hnyXdaiLpAddress = "0x4505b262dc053998c10685dc5f9098af8ae5c8ad";
 const wethAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 const brightAddress = "0x5dd57da40e6866c9fcc34f4b6ddc89f1ba740dfe";
 const brightPoolAddress = "0x615d40af2c321bd0cd6345ae0a7fc1506a659a89";
+const ethStakingRewardsAddress = "0x79A7CAD3Ac4554C133dCaaa9Bc3319385Eb7FD5D";
+const subsAddress = "0x61CEAc48136d6782DBD83c09f51E23514D12470a";
+const xdaiStakingRewardsAddress = "0x79A7CAD3Ac4554C133dCaaa9Bc3319385Eb7FD5D";
+const hnyBrightLpAddress = "0x0907239acfe1d0cfc7f960fc7651e946bb34a7b0";
 
 export const getEthPrice = async (ethProvider: providers.Provider) => {
   try {
@@ -93,6 +99,82 @@ export const getBrightPrice = async (ethProvider: providers.Provider) => {
     return price;
   } catch (err: any) {
     console.log("error getting bright price", err.message);
+    return new BigNumber("0");
+  }
+};
+
+export const getV3Liquidity = async (ethProvider: providers.Provider) => {
+  try {
+    const totalEth = await ERC721NftsProvider(ethProvider);
+    const ethPrice = await getEthPrice(ethProvider);
+
+    if (!totalEth || !ethPrice) {
+      throw new Error("unable to query network");
+    }
+
+    const totalEthBn = new BigNumber(totalEth.toExact() || 0);
+    const totalLiquidity = ethPrice.multipliedBy(totalEthBn);
+
+    return totalLiquidity;
+  } catch (err) {
+    console.log("error getting eth liquidity", err);
+    return new BigNumber("0");
+  }
+};
+
+export const getSubsLiquidity = async (ethProvider: providers.Provider) => {
+  try {
+    const subsContract = new Contract(
+      subsAddress,
+      ERC20_CONTRACT_ABI,
+      ethProvider
+    );
+
+    const subsBalance = await subsContract.balanceOf(ethStakingRewardsAddress);
+
+    return subsBalance;
+  } catch (err) {
+    return new BigNumber("0");
+  }
+};
+
+export const getXdaiLiquidity = async (xdaiProvider: providers.Provider) => {
+  try {
+    const hnyBrightLpContract = new Contract(
+      hnyBrightLpAddress,
+      V2LP_CONTRACT_ABI,
+      xdaiProvider
+    );
+    // token0 0x71850b7E9Ee3f13Ab46d67167341E4bDc905Eef9 - HNY
+    // token1 0x83FF60E2f93F8eDD0637Ef669C69D5Fb4f64cA8E - BRIGHT
+
+    const hnyBrightReserves = await hnyBrightLpContract.getReserves();
+
+    const hnyReserves = new BigNumber(hnyBrightReserves[0].toString());
+
+    const totalBalanceStaked = new BigNumber(
+      (
+        await hnyBrightLpContract.balanceOf(xdaiStakingRewardsAddress)
+      ).toString()
+    );
+
+    const totalSupply = new BigNumber(
+      (await hnyBrightLpContract.totalSupply()).toString()
+    );
+
+    const ratioStakedLiquidity = totalBalanceStaked.dividedBy(totalSupply);
+
+    const totalLiquidityInHny = hnyReserves
+      .multipliedBy(2)
+      .multipliedBy(ratioStakedLiquidity)
+      .dividedBy(10 ** 18);
+
+    const hnyPrice = await getHnyPrice(xdaiProvider);
+    const totalLiquidityInUsd = totalLiquidityInHny.multipliedBy(hnyPrice);
+
+    return totalLiquidityInUsd;
+  } catch (err) {
+    console.log("error getting xdai liquidity", err);
     return new BigNumber("0");
   }
 };
