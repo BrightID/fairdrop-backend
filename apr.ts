@@ -115,7 +115,7 @@ aprRouter.get("/brightSupply", async (request, response, next) => {
       response.json({
         totalSupply: brightSupply.toFixed(),
         maxTotalSupply: brightMaxSupply.toFixed(),
-        circulatingSupply: brightCirculatingSupply.toFixed(),
+        circulating: brightCirculatingSupply.toFixed(),
       });
     }
   } catch {
