@@ -7,7 +7,8 @@ import {
   // getEthPrice,
   // getHnyPrice,
   getBrightPrice,
-} from "./prices";
+  getBrightSupply,
+} from "./prices"
 import express from "express";
 
 export const aprRouter = express.Router();
@@ -25,7 +26,9 @@ try {
   ethProvider = new ethers.providers.JsonRpcProvider(myInfuraURL);
   // XDAI
   xdaiProvider = new ethers.providers.JsonRpcProvider(
-    "https://apis.ankr.com/4164ca4b4c6146c6ae9ea022ba0f243f/4b48f5b0daf90f4ae6d5b14ce4783f15/xdai/fast/main"
+    // "https://apis.ankr.com/4164ca4b4c6146c6ae9ea022ba0f243f/4b48f5b0daf90f4ae6d5b14ce4783f15/xdai/fast/main"
+    "https://rpc.ankr.com/gnosis"
+    // "http://nethermind-xdai.dappnode:8545"
   );
 
   getBrightPrice(ethProvider);
@@ -40,6 +43,10 @@ let subsBalance = new BigNumber("0");
 let totalV3Liquidity = new BigNumber("0");
 let xdaiLiquidity = new BigNumber("0");
 let brightPrice = new BigNumber("0");
+let brightSupply = new BigNumber("0");
+let brightCirculatingSupply = new BigNumber("0");
+let brightMaxSupply = new BigNumber("0");
+
 
 const loop = async () => {
   try {
@@ -47,6 +54,7 @@ const loop = async () => {
     totalV3Liquidity = await getV3Liquidity(ethProvider);
     xdaiLiquidity = await getXdaiLiquidity(xdaiProvider);
     brightPrice = await getBrightPrice(ethProvider);
+    ({brightSupply, brightCirculatingSupply, brightMaxSupply} = await getBrightSupply(ethProvider, xdaiProvider))
   } catch (err: any) {
     console.log(`unable to query prices: ${err.message}`);
   }
@@ -98,6 +106,23 @@ aprRouter.get("/brightPrice", async (request, response, next) => {
     response.status(500).json({ error: "Unable to query bright price" });
   }
 });
+
+aprRouter.get("/brightSupply", async (request, response, next) => {
+  try {
+    if (brightSupply.isZero() || brightCirculatingSupply.isZero()) {
+      throw new Error("Unable to query bright supply");
+    } else {
+      response.json({
+        totalSupply: brightSupply.toFixed(),
+        maxTotalSupply: brightMaxSupply.toFixed(),
+        circulatingSupply: brightCirculatingSupply.toFixed(),
+      });
+    }
+  } catch {
+    response.status(500).json({ error: "Unable to query bright price" });
+  }
+});
+
 
 // maybe add these later?
 
