@@ -26,8 +26,7 @@ try {
   ethProvider = new ethers.providers.JsonRpcProvider(myInfuraURL);
   // XDAI
   xdaiProvider = new ethers.providers.JsonRpcProvider(
-    // "https://apis.ankr.com/4164ca4b4c6146c6ae9ea022ba0f243f/4b48f5b0daf90f4ae6d5b14ce4783f15/xdai/fast/main"
-    "https://rpc.ankr.com/gnosis"
+    "https://rpc.ankr.com/gnosis/51ac381249e27150efb048ea0540d297b5445eef551c8d79775cb12ba7f9f9ca"
     // "http://nethermind-xdai.dappnode:8545"
   );
 
