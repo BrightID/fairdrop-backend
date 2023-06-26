@@ -208,8 +208,8 @@ export const getBrightSupply = async (ethProvider: providers.Provider, xdaiProvi
     console.log(`bright supply: ${formatUnits(brightSupply)}`)
 
     // get locked balances on mainnet
-    const xDaiOmnibridgeBalance = await brightContract.balanceOf(xdaiOmnibridgeMainnet)
-    console.log(`xDaiOmnibridgeBalance: ${formatUnits(xDaiOmnibridgeBalance)}`)
+
+    // TODO: stop subtracting the subsFarm after Sep 16th 2023 after all rewards are claimable 
     const subsFarmBalance = await brightContract.balanceOf(SubsFarmMainnet)
     console.log(`subsFarmBalance: ${formatUnits(subsFarmBalance)}`)
     const m3SafeMainnetBalance = await brightContract.balanceOf(M3SafeMainnet)
@@ -228,7 +228,6 @@ export const getBrightSupply = async (ethProvider: providers.Provider, xdaiProvi
     console.log(`m3SafeXDaiBalance: ${formatUnits(m3SafeXDaiBalance)}`)
 
     let circulating = brightSupply
-      .sub(xDaiOmnibridgeBalance)
       .sub(subsFarmBalance)
       .sub(m3SafeMainnetBalance)
       .sub(brightDAOCommunityPoolXDaiBalance)
