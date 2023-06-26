@@ -183,7 +183,6 @@ export const getXdaiLiquidity = async (xdaiProvider: providers.Provider) => {
 };
 
 // Bright token holders excluded from circulating supply - mainnet
-const xdaiOmnibridgeMainnet = "0x88ad09518695c6c3712ac10a214be5109a655671"
 const SubsFarmMainnet = "0x79a7cad3ac4554c133dcaaa9bc3319385eb7fd5d"
 const M3SafeMainnet = "0x693fb04d603d800fa9456a02564ba060da8939fc"
 // Bright token holders excluded from circulating supply - xDai
